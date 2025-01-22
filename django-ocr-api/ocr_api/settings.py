@@ -19,6 +19,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+APP_NAME = "ocr"
 
 # Application definition
 
@@ -32,7 +33,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "drf_spectacular_sidecar",
-    "ocr",
+    f"{APP_NAME}.apps.OcrConfig",
 ]
 
 REST_FRAMEWORK = {
