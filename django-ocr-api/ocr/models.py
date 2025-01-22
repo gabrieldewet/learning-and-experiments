@@ -23,7 +23,9 @@ class Job(models.Model):
 
         raise IntegrityError("Could not generate unique job ID")
 
-    id = models.CharField(primary_key=True, default=generate_job_id, editable=False)
+    id = models.CharField(
+        primary_key=True, default=generate_job_id, max_length=100, editable=False
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     result = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
