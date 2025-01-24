@@ -8,6 +8,11 @@ from rest_framework.response import Response
 logger = logging.getLogger(settings.APP_NAME)
 
 
+# Function to read pdf file and return number of pages;
+def read_pdf(file):
+    
+
+
 # Create your views here.
 @api_view(["POST"])
 def ocr_job(request: Request):
