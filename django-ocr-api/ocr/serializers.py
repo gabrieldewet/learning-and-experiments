@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from .models import Job
+
 __all__ = [
     "RequestSerializer",
     "ErrorMesageSerializer",
@@ -8,6 +10,13 @@ __all__ = [
     "PageSerializer",
     "ResponseSerializer",
 ]
+
+
+class JobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Job
+        fields = ["id", "status", "result", "created_at", "updated_at"]
+        read_only_fields = ["id", "status", "result", "created_at", "updated_at"]
 
 
 class RequestSerializer(serializers.Serializer):
