@@ -1,3 +1,4 @@
+from adrf.serializers import ModelSerializer, Serializer
 from rest_framework import serializers
 
 from .models import Job
@@ -12,14 +13,14 @@ __all__ = [
 ]
 
 
-class JobSerializer(serializers.ModelSerializer):
+class JobSerializer(ModelSerializer):
     class Meta:
         model = Job
         fields = ["id", "status", "result", "created_at", "updated_at"]
         read_only_fields = ["id", "status", "result", "created_at", "updated_at"]
 
 
-class RequestSerializer(serializers.Serializer):
+class RequestSerializer(Serializer):
     file = serializers.FileField()
 
     def validate_file(self, value):
@@ -29,30 +30,30 @@ class RequestSerializer(serializers.Serializer):
         return value
 
 
-class ErrorMesageSerializer(serializers.Serializer):
+class ErrorMesageSerializer(Serializer):
     message = serializers.CharField()
 
 
-class JobResponseSerializer(serializers.Serializer):
+class JobResponseSerializer(Serializer):
     job_id = serializers.CharField()
     file_name = serializers.CharField()
     created_at = serializers.DateTimeField()
     completed = serializers.BooleanField()
 
 
-class LineSerializer(serializers.Serializer):
+class LineSerializer(Serializer):
     line_number = serializers.IntegerField()
     text = serializers.CharField()
     bbox = serializers.ListField(child=serializers.IntegerField())
 
 
-class PageSerializer(serializers.Serializer):
+class PageSerializer(Serializer):
     page_number = serializers.IntegerField()
     text = serializers.CharField()
     lines = LineSerializer(many=True)
 
 
-class ResponseSerializer(serializers.Serializer):
+class ResponseSerializer(Serializer):
     job_id = serializers.CharField()
     file_name = serializers.CharField()
     created_at = serializers.DateTimeField()

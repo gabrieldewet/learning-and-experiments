@@ -23,7 +23,7 @@ from drf_spectacular.views import (
 )
 
 urlpatterns = [
-    path("ocr/", include("ocr.urls")),
+    path("", include("ocr.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # Optional UI:
     path(

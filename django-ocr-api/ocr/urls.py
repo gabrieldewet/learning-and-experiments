@@ -20,6 +20,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.ocr_job, name="ocr-process-file"),
-    path("<str:job_id>/", views.ocr_result, name="ocr-get-result"),
+    path("ocr/", views.ocr_job, name="ocr-process-file"),
+    path("ocr/<str:job_id>/", views.ocr_result, name="ocr-get-result"),
+    path("", views.health_check, name="health-check"),
 ]
