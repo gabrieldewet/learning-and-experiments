@@ -1,7 +1,7 @@
 import time
 
 from django.conf import settings
-from django.db import IntegrityError, models
+from django.db import models
 
 
 def generate_job_id(max_retries=3):
