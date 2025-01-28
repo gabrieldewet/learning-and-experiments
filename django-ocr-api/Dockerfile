@@ -18,21 +18,21 @@ ENV UV_LINK_MODE=copy
 
 # Then, add the rest of the project source code and install it
 # Installing separately from its dependencies allows optimal layer caching
-
+# Install the project's dependencies using the lockfile and settings
 # Copy requirements first
-COPY requirements.txt .
+COPY pyproject.toml uv.lock ./
 
-# Install dependencies
-RUN uv venv && \
-    . .venv/bin/activate && \
-    uv pip install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
 
-ADD . /app
+COPY . .
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-# RUN /bin/bash scripts/download_models.sh
+# Mount AWS credentials for donwloading models from S3
+RUN --mount=type=secret,id=aws_credentials,target=/root/.aws/credentials \
+    /bin/bash scripts/download_models.sh
 
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT []

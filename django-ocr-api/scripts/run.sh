@@ -19,19 +19,15 @@ else
     INTERACTIVE=""
 fi
 
+docker build --secret id=aws_credentials,src=$HOME/.aws/credentials -t ocr-async-api .
+
 docker run \
     -v \
     --rm \
-    --volume ~/.aws:/root/.aws:ro \
     --publish 8001:8001 \
     $INTERACTIVE \
-    $(docker build -q .) \
+    ocr-async-api \
     "$@"
-
-
 
     # --volume .:/app \
     # --volume /app/.venv \
-
-# docker run  --rm -it $(docker build -q .) bash
-# -v ~/.aws:/root/.aws:ro
