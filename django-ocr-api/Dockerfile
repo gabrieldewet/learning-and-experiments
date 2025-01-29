@@ -34,10 +34,16 @@ ENV PATH="/app/.venv/bin:$PATH"
 RUN --mount=type=secret,id=aws_credentials,target=/root/.aws/credentials \
     /bin/bash scripts/download_models.sh
 
+# Expose port
+EXPOSE 8001
+
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT []
 
-# Run the FastAPI application by default
-# Uses `fastapi dev` to enable hot-reloading when the `watch` sync occurs
-# Uses `--host 0.0.0.0` to allow access from outside the container
-CMD ["/bin/bash"]
+# Start Gunicorn with Uvicorn workers
+CMD ["gunicorn", \
+    "--bind", "0.0.0.0:8001", \
+    "--workers", "1", \
+    "--worker-class", "uvicorn.workers.UvicornWorker", \
+    "--timeout", "300", \
+    "ocr_api.asgi:application"]

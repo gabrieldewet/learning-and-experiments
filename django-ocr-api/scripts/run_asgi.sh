@@ -1,3 +1,5 @@
-uvicorn ocr_api.asgi:application --reload
+# With uvicorn
+uvicorn ocr_api.asgi:application --port 8001 --reload
 
-# uvicorn your_project.asgi:application --host 0.0.0.0 --port 8000 --reload --workers 4
+# With gunicorn
+# gunicorn -k uvicorn.workers.UvicornWorker ocr_api.asgi:application --bind :8001 --reload
