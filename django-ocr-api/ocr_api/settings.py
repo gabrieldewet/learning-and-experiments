@@ -118,6 +118,8 @@ DATABASES = {
     }
 }
 
+PADDLE_MODELS_DIR = BASE_DIR.parent / "models" / "paddle_onnx"
+
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "OCR API",
