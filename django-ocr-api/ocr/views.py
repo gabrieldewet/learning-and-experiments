@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from adrf.decorators import api_view
 from asgiref.sync import sync_to_async
@@ -49,21 +50,26 @@ async def ocr_job(request: Request):
 
     ocr_engine = apps.get_app_config(settings.APP_NAME).ocr_engine
 
+    job = await sync_to_async(Job.objects.create)()
+    job.result = {"message": "Processing started"}
+    await sync_to_async(job.save)()
+
     if "path" in request.data:
         request_serializer = PathSerializer(data=request.data)
         if not request_serializer.is_valid():
+            job.result = request_serializer.error_messages
+            job.status = "failed"
+            await sync_to_async(job.save)()
+
             return Response(
                 request_serializer.error_messages, status=status.HTTP_400_BAD_REQUEST
             )
 
         # Read in files
-        input_path = Path(request_serializer.validated_data.path)
+        input_path = Path(request_serializer.validated_data["path"])
         multiple_files = (
-            input_path.is_dir() and not request_serializer.validated_data.single_file
+            input_path.is_dir() and not request_serializer.validated_data["single_file"]
         )
-
-        job = await sync_to_async(Job.objects.create)()
-        job.result = {"message": "Processing started"}
 
         # Start processing in the background
         asyncio.create_task(process_job(job.id, input_path, multiple_files, ocr_engine))
@@ -74,24 +80,34 @@ async def ocr_job(request: Request):
 
     request_serializer = MultipartSerializer(data=request.data)
     if not request_serializer.is_valid():
+        job.result = request_serializer.error_messages
+        job.status = "failed"
+        await sync_to_async(job.save)()
         return Response(
             request_serializer.error_messages, status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Read file and unzip into temporary directory
+    uploaded_file = request_serializer.validated_data["file"]
 
-    # Create a new job
-    job = await sync_to_async(Job.objects.create)()
-    job.result = {"message": "Processing started"}
+    with TemporaryDirectory() as tmp_dir:
+        # Read file and unzip into temporary directory
+        if uploaded_file.name.lower().endswith(".zip"):
+            ...
 
-    # Start processing in the background
-    asyncio.create_task(process_job(job.id))
+        input_path = Path(tmp_dir) / uploaded_file.name
+        with input_path.open("wb") as dest:
+            for chunk in uploaded_file.chunks():
+                dest.write(chunk)
 
-    # Return the job ID immediately
-    serializer = JobSerializer(job)
+        # Start processing in the background
+        asyncio.create_task(
+            process_job(job.id, input_path.as_posix(), False, ocr_engine)
+        )
 
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-    # return Response({"message": "POST request received", "data": request.data})
+        # Return the job ID immediately
+        response_serializer = JobSerializer(job)
+
+    return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])
