@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 
 from adrf.decorators import api_view
 from asgiref.sync import sync_to_async
@@ -16,7 +17,7 @@ from .serializers import JobSerializer, MultipartSerializer, PathSerializer
 logger = logging.getLogger(settings.APP_NAME)
 
 
-async def process_job(job_id, ocr_engine: OcrEngine):
+async def process_job(job_id, path: Path, multi_files: bool, ocr_engine: OcrEngine):
     """Simulate some async processing"""
     job = await sync_to_async(Job.objects.get)(id=job_id)
 
@@ -49,17 +50,35 @@ async def ocr_job(request: Request):
     ocr_engine = apps.get_app_config(settings.APP_NAME).ocr_engine
 
     if "path" in request.data:
-        serializer = PathSerializer(data=request.data)
-        if not serializer.is_valid():
+        request_serializer = PathSerializer(data=request.data)
+        if not request_serializer.is_valid():
             return Response(
-                serializer.error_messages, status=status.HTTP_400_BAD_REQUEST
+                request_serializer.error_messages, status=status.HTTP_400_BAD_REQUEST
             )
 
         # Read in files
+        input_path = Path(request_serializer.validated_data.path)
+        multiple_files = (
+            input_path.is_dir() and not request_serializer.validated_data.single_file
+        )
 
-        job = Job.objects.create(status="pending")
-        process_prediction.delay(path=serializer.validated_data["path"], job_id=job.id)
-        return Response(JobSerializer(job).data)
+        job = await sync_to_async(Job.objects.create)()
+        job.result = {"message": "Processing started"}
+
+        # Start processing in the background
+        asyncio.create_task(process_job(job.id, input_path, multiple_files, ocr_engine))
+
+        # Return the job ID immediately
+        response_serializer = JobSerializer(job)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    request_serializer = MultipartSerializer(data=request.data)
+    if not request_serializer.is_valid():
+        return Response(
+            request_serializer.error_messages, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Read file and unzip into temporary directory
 
     # Create a new job
     job = await sync_to_async(Job.objects.create)()

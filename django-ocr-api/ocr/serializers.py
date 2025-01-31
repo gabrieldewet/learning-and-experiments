@@ -19,14 +19,14 @@ class JobSerializer(ModelSerializer):
         read_only_fields = ["id", "status", "result", "created_at", "updated_at"]
 
 
-class PathSerializer(serializers.Serializer):
+class PathSerializer(Serializer):
     path = serializers.CharField()
-    single_job = serializers.BooleanField(default=True)
+    single_file = serializers.BooleanField(default=True)
 
 
-class MultipartSerializer(serializers.Serializer):
+class MultipartSerializer(Serializer):
     file = serializers.FileField()
-    single_job = serializers.BooleanField(default=True)
+    single_file = serializers.BooleanField(default=True)
 
 
 class RequestSerializer(Serializer):
