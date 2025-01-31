@@ -16,7 +16,6 @@ ENV UV_COMPILE_BYTECODE=1
 # Copy from the cache instead of linking since it's a mounted volume
 ENV UV_LINK_MODE=copy
 
-# Then, add the rest of the project source code and install it
 # Installing separately from its dependencies allows optimal layer caching
 # Install the project's dependencies using the lockfile and settings
 # Copy requirements first

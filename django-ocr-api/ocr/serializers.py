@@ -5,7 +5,6 @@ from .models import Job
 
 __all__ = [
     "RequestSerializer",
-    "ErrorMesageSerializer",
     "JobResponseSerializer",
     "LineSerializer",
     "PageSerializer",
@@ -20,6 +19,16 @@ class JobSerializer(ModelSerializer):
         read_only_fields = ["id", "status", "result", "created_at", "updated_at"]
 
 
+class PathSerializer(serializers.Serializer):
+    path = serializers.CharField()
+    single_job = serializers.BooleanField(default=True)
+
+
+class MultipartSerializer(serializers.Serializer):
+    file = serializers.FileField()
+    single_job = serializers.BooleanField(default=True)
+
+
 class RequestSerializer(Serializer):
     file = serializers.FileField()
 
@@ -28,10 +37,6 @@ class RequestSerializer(Serializer):
         if not (value.name.endswith(".pdf") or value.name.endswith(".png")):
             raise serializers.ValidationError("File must be a PDF or PNG.")
         return value
-
-
-class ErrorMesageSerializer(Serializer):
-    message = serializers.CharField()
 
 
 class JobResponseSerializer(Serializer):
