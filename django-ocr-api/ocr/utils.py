@@ -1,6 +1,9 @@
+import zipfile
+
 import pymupdf
 import requests
 from attrs import define, field
+from django.core.files.uploadedfile import UploadedFile
 
 
 @define
@@ -132,3 +135,10 @@ def format_pdf_text(lines: list[Line]) -> str:
         result.append(line_text)
 
     return "\n".join(result)
+
+
+def extract_zip(zip_file: UploadedFile, extract_path: str) -> list[str]:
+    extracted_files = []
+    with zipfile.ZipFile(zip_file) as zip_ref:
+        zip_ref.extractall(extract_path)
+        extracted_files = zip_ref.namelist()

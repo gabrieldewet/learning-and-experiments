@@ -7,6 +7,7 @@ from adrf.decorators import api_view
 from asgiref.sync import sync_to_async
 from django.apps import apps
 from django.conf import settings
+from django.core.files.uploadedfile import UploadedFile
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,17 +15,66 @@ from rest_framework.response import Response
 from .inference import OcrEngine
 from .models import Job
 from .serializers import JobSerializer, MultipartSerializer, PathSerializer
+from .utils import extract_zip
 
 logger = logging.getLogger(settings.APP_NAME)
 
 
-async def process_job(job_id, path: Path, multi_files: bool, ocr_engine: OcrEngine):
+async def process_path(
+    job_id, input_path: Path, multi_files: bool, ocr_engine: OcrEngine
+):
     """Simulate some async processing"""
     job = await sync_to_async(Job.objects.get)(id=job_id)
 
     # Update status to processing
     job.status = "processing"
     await sync_to_async(job.save)()
+
+    if input_path.is_dir():
+        # Process all files here
+        ...
+
+    else:
+        # Process single file here
+        ...
+
+    # Simulate some work
+    await asyncio.sleep(10)
+
+    # Update with result
+    job.status = "completed"
+    job.result = {"message": "Processing completed successfully"}
+    await sync_to_async(job.save)()
+
+
+async def process_file(
+    job_id, uploaded_file: UploadedFile, multi_files: bool, ocr_engine: OcrEngine
+):
+    job = await sync_to_async(Job.objects.get)(id=job_id)
+
+    # Update status to processing
+    job.status = "processing"
+    await sync_to_async(job.save)()
+
+    with TemporaryDirectory() as tmp_dir:
+        # Read file and unzip into temporary directory
+        if uploaded_file.name.lower().endswith(".zip"):
+            extract_zip(uploaded_file, tmp_dir)
+            input_path = Path(tmp_dir)
+
+        else:
+            input_path = Path(tmp_dir) / uploaded_file.name
+            with input_path.open("wb") as dest:
+                for chunk in uploaded_file.chunks():
+                    dest.write(chunk)
+
+    if input_path.is_dir():
+        # Process all files here
+        ...
+
+    else:
+        # Process single file here
+        ...
 
     # Simulate some work
     await asyncio.sleep(10)
@@ -72,7 +122,9 @@ async def ocr_job(request: Request):
         )
 
         # Start processing in the background
-        asyncio.create_task(process_job(job.id, input_path, multiple_files, ocr_engine))
+        asyncio.create_task(
+            process_path(job.id, input_path, multiple_files, ocr_engine)
+        )
 
         # Return the job ID immediately
         response_serializer = JobSerializer(job)
@@ -89,23 +141,11 @@ async def ocr_job(request: Request):
 
     uploaded_file = request_serializer.validated_data["file"]
 
-    with TemporaryDirectory() as tmp_dir:
-        # Read file and unzip into temporary directory
-        if uploaded_file.name.lower().endswith(".zip"):
-            ...
+    # Start processing in the background
+    asyncio.create_task(process_file(job.id, uploaded_file, False, ocr_engine))
 
-        input_path = Path(tmp_dir) / uploaded_file.name
-        with input_path.open("wb") as dest:
-            for chunk in uploaded_file.chunks():
-                dest.write(chunk)
-
-        # Start processing in the background
-        asyncio.create_task(
-            process_job(job.id, input_path.as_posix(), False, ocr_engine)
-        )
-
-        # Return the job ID immediately
-        response_serializer = JobSerializer(job)
+    # Return the job ID immediately
+    response_serializer = JobSerializer(job)
 
     return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -119,8 +159,7 @@ async def ocr_result(request: Request, job_id):
         serializer = JobSerializer(job)
         return Response(serializer.data)
     except Job.DoesNotExist:
-        serializer = ErrorMesageSerializer({"message": "Job not found"})
-        return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["GET"])
