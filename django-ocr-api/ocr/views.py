@@ -14,7 +14,12 @@ from rest_framework.response import Response
 
 from .inference import OcrEngine
 from .models import Job
-from .serializers import JobSerializer, MultipartSerializer, PathSerializer
+from .serializers import (
+    DocumentSerializer,
+    JobSerializer,
+    MultipartSerializer,
+    PathSerializer,
+)
 from .utils import extract_zip
 
 logger = logging.getLogger(settings.APP_NAME)
@@ -23,39 +28,40 @@ logger = logging.getLogger(settings.APP_NAME)
 async def process_path(
     job_id, input_path: Path, multi_files: bool, ocr_engine: OcrEngine
 ):
-    """Simulate some async processing"""
     job = await sync_to_async(Job.objects.get)(id=job_id)
 
     # Update status to processing
     job.status = "processing"
     await sync_to_async(job.save)()
 
+    documents = []
     if input_path.is_dir():
-        # Process all files here
-        ...
+        if multi_files:
+            ocr_result = await sync_to_async(ocr_engine.ocr_document_multi)(
+                input_path.as_posix()
+            )
+            documents.append(ocr_result.formatted_results)
+        else:
+            for f in input_path.glob("*"):
+                ocr_result = await sync_to_async(ocr_engine.ocr_document)(f.as_posix())
+                documents.append(ocr_result.formatted_results)
 
     else:
-        # Process single file here
-        ...
-
-    # Simulate some work
-    await asyncio.sleep(10)
+        ocr_result = await sync_to_async(ocr_engine.ocr_document)(input_path.as_posix())
+        documents.append(ocr_result.formatted_results)
 
     # Update with result
     job.status = "completed"
-    job.result = {"message": "Processing completed successfully"}
+    job.result = {
+        "documents": documents,
+        "message": "Processing completed successfully",
+    }
     await sync_to_async(job.save)()
 
 
 async def process_file(
     job_id, uploaded_file: UploadedFile, multi_files: bool, ocr_engine: OcrEngine
 ):
-    job = await sync_to_async(Job.objects.get)(id=job_id)
-
-    # Update status to processing
-    job.status = "processing"
-    await sync_to_async(job.save)()
-
     with TemporaryDirectory() as tmp_dir:
         # Read file and unzip into temporary directory
         if uploaded_file.name.lower().endswith(".zip"):
@@ -68,21 +74,7 @@ async def process_file(
                 for chunk in uploaded_file.chunks():
                     dest.write(chunk)
 
-    if input_path.is_dir():
-        # Process all files here
-        ...
-
-    else:
-        # Process single file here
-        ...
-
-    # Simulate some work
-    await asyncio.sleep(10)
-
-    # Update with result
-    job.status = "completed"
-    job.result = {"message": "Processing completed successfully"}
-    await sync_to_async(job.save)()
+    await process_path(job_id, input_path, multi_files, ocr_engine)
 
 
 # Create your views here.

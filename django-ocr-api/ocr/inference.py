@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import numpy as np
 import pymupdf
@@ -33,7 +34,8 @@ class OcrEngine:
             lang="fr",
         )
 
-    def ocr_document(self, file_path: str):
+    def ocr_document(self, file_path: str) -> Document:
+        logger.info(f"OCR document at {file_path=}")
         document = read_file(file_path)
         pages = []
         for page in document:
@@ -41,7 +43,19 @@ class OcrEngine:
             pages.append(Page(page.number, result[0]))
         return Document(file_path, pages)
 
-    def ocr_page(self, page: pymupdf.Page):
+    def ocr_document_multi(self, file_path: str) -> Document:
+        logger.info(f"OCR multiple files in single document at {file_path=}")
+        page_no = 0
+        pages = []
+        for f in Path(file_path).glob("*"):
+            document = read_file(f)
+            for page in document:
+                result = self.ocr_page(page)
+                pages.append(Page(page_no, result[0]))
+                page_no += 1
+        return Document(file_path, pages)
+
+    def ocr_page(self, page: pymupdf.Page) -> list:
         mat = pymupdf.Matrix(2, 2)
         pm = page.get_pixmap(matrix=mat, alpha=False)
         img = Image.frombytes("RGB", [pm.width, pm.height], pm.samples)

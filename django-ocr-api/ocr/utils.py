@@ -83,6 +83,23 @@ class Document:
     file_path: str
     pages: list[Page]
 
+    @property
+    def formatted_results(self):
+        return {
+            "file_path": self.file_path,
+            "pages": [
+                {
+                    "page_number": page.page_number,
+                    "lines": [
+                        {"text": line.text, "bbox": line.output_bbox}
+                        for line in page.sorted_lines
+                    ],
+                    "page_text": page.text,
+                }
+                for page in self.pages
+            ],
+        }
+
 
 def read_file(pdf_path: str) -> pymupdf.Document:
     if pdf_path.startswith("http"):
