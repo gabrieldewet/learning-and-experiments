@@ -94,7 +94,7 @@ class Document:
                         {"text": line.text, "bbox": line.output_bbox}
                         for line in page.sorted_lines
                     ],
-                    "page_text": page.text,
+                    "text": page.text,
                 }
                 for page in self.pages
             ],

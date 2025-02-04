@@ -80,6 +80,8 @@ async def process_file(
 # Create your views here.
 @api_view(["POST"])
 async def ocr_job(request: Request):
+    start_time = asyncio.get_event_loop().time()
+    logger.info(f"Starting ocr_job at {start_time}")
     if request.method != "POST":
         # Validate request here
 
@@ -91,10 +93,13 @@ async def ocr_job(request: Request):
     logger.info(f"ocr_job POST request received with data: {request.data}")
 
     ocr_engine = apps.get_app_config(settings.APP_NAME).ocr_engine
-
+    logger.info(
+        f"Got OCR engine at {asyncio.get_event_loop().time() - start_time:.2f}s"
+    )
     job = await sync_to_async(Job.objects.create)()
     job.result = {"message": "Processing started"}
     await sync_to_async(job.save)()
+    logger.info(f"Created job at {asyncio.get_event_loop().time() - start_time:.2f}s")
 
     if "path" in request.data:
         request_serializer = PathSerializer(data=request.data)
@@ -112,14 +117,22 @@ async def ocr_job(request: Request):
         multiple_files = (
             input_path.is_dir() and not request_serializer.validated_data["single_file"]
         )
-
+        logger.info(
+            f"Validated path at {asyncio.get_event_loop().time() - start_time:.2f}s"
+        )
         # Start processing in the background
         asyncio.create_task(
             process_path(job.id, input_path, multiple_files, ocr_engine)
         )
+        logger.info(
+            f"Created background task at {asyncio.get_event_loop().time() - start_time:.2f}s"
+        )
 
         # Return the job ID immediately
         response_serializer = JobSerializer(job)
+        logger.info(
+            f"Prepared response at {asyncio.get_event_loop().time() - start_time:.2f}s"
+        )
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     request_serializer = MultipartSerializer(data=request.data)

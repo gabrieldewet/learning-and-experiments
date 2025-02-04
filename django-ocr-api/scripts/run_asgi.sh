@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # With uvicorn
 uvicorn ocr_api.asgi:application --port 8001 --reload
 

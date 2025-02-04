@@ -59,4 +59,5 @@ class OcrEngine:
         mat = pymupdf.Matrix(2, 2)
         pm = page.get_pixmap(matrix=mat, alpha=False)
         img = Image.frombytes("RGB", [pm.width, pm.height], pm.samples)
-        return self.model.ocr(np.array(img), cls=False), img
+
+        return self.model.ocr(np.array(img), cls=False)[0], img
