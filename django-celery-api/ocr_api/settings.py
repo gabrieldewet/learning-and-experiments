@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "adrf",
     f"{APP_NAME}.apps.OcrConfig",
 ]
 
@@ -116,6 +117,8 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+PADDLE_MODELS_DIR = BASE_DIR.parent / "models" / "paddle_onnx"
 
 
 SPECTACULAR_SETTINGS = {
