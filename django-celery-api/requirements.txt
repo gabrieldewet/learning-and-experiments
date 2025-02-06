@@ -14,3 +14,4 @@ asyncio==3.4.3
 uvicorn==0.34.0
 gunicorn==23.0.0
 adrf==0.1.9
+celery==5.4.0
