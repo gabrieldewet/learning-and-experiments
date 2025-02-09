@@ -1,1 +1,1 @@
-celery -A tasks worker --loglevel=INFO
+celery -A celery_demo worker --loglevel=INFO
