@@ -8,7 +8,7 @@ else
   if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "  # macOS (using Homebrew):"
     brew install redis
-  else [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  else
     echo "  # Linux (Debian/Ubuntu):"
     sudo apt-get update && sudo apt-get install -y redis-server
   fi

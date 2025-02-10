@@ -1,4 +1,5 @@
 import zipfile
+from io import BytesIO
 
 import pymupdf
 import requests
@@ -52,9 +53,7 @@ class Line:
 @define
 class Page:
     page_number: int
-    lines: list[Line] = field(
-        converter=lambda x: [Line(box[1][0], box[0]) for box in x]
-    )
+    lines: list[Line] = field(converter=lambda x: [Line(box[1][0], box[0]) for box in x])
     sorted_lines: list[Line] = field(init=False)
     text: str = field(init=False)
 
@@ -90,10 +89,7 @@ class Document:
             "pages": [
                 {
                     "page_number": page.page_number,
-                    "lines": [
-                        {"text": line.text, "bbox": line.output_bbox}
-                        for line in page.sorted_lines
-                    ],
+                    "lines": [{"text": line.text, "bbox": line.output_bbox} for line in page.sorted_lines],
                     "text": page.text,
                 }
                 for page in self.pages
@@ -143,9 +139,7 @@ def format_pdf_text(lines: list[Line]) -> str:
         line_text = ""
         for line in lines_in_group:
             # Add spaces based on x position
-            spaces_needed = int(
-                (line.x_left - current_x) / 5
-            )  # Divide by 5 to scale down
+            spaces_needed = int((line.x_left - current_x) / 5)  # Divide by 5 to scale down
             line_text += " " * spaces_needed + line.text
             current_x = line.x_right
 
@@ -156,6 +150,6 @@ def format_pdf_text(lines: list[Line]) -> str:
 
 def extract_zip(zip_file: UploadedFile, extract_path: str) -> list[str]:
     extracted_files = []
-    with zipfile.ZipFile(zip_file) as zip_ref:
+    with zipfile.ZipFile(BytesIO(zip_file)) as zip_ref:
         zip_ref.extractall(extract_path)
         extracted_files = zip_ref.namelist()

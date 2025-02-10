@@ -9,15 +9,8 @@ from django.dispatch import receiver
 class OcrConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = settings.APP_NAME
-    label = settings.APP_NAME
 
     def ready(self):
-        # Do this check to avoid double loading when running in develoment mode
-        if os.environ.get("RUN_MAIN") != "true":
-            from .inference import OcrEngine
-
-            self.ocr_engine = OcrEngine()
-
         @receiver(connection_created, dispatch_uid="setup_sqlite_once")
         def setup_sqlite_pragmas(sender, connection, **kwargs):
             if connection.vendor == "sqlite":
