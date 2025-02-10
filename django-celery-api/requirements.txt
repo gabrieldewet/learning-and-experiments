@@ -12,3 +12,4 @@ uvicorn==0.34.0
 gunicorn==23.0.0
 celery==5.4.0
 django-celery-results==2.5.1
+redis==5.2.1

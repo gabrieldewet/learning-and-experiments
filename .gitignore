@@ -2,3 +2,4 @@
 *.log
 *.ipynb
 *.rdb
+*.sqlite3
