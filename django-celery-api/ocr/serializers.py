@@ -17,8 +17,8 @@ class JobSerializer(ModelSerializer):
 
     class Meta:
         model = Job
-        fields = ["id", "status", "result", "created_at", "updated_at"]
-        read_only_fields = ["id", "status", "result", "created_at", "updated_at"]
+        fields = ["id", "multi_doc", "status", "result", "created_at", "updated_at"]
+        read_only_fields = ["id", "multi_doc", "status", "result", "created_at", "updated_at"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -26,9 +26,7 @@ class JobSerializer(ModelSerializer):
         if instance.status == "completed":
             # Multiple documents case
             representation["result"] = {
-                "documents": [
-                    DocumentSerializer(doc).data for doc in instance.result["documents"]
-                ],
+                "documents": [DocumentSerializer(doc).data for doc in instance.result["documents"]],
                 "message": instance.result["message"],
             }
 
@@ -48,9 +46,7 @@ class MultipartSerializer(Serializer):
         valid_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".zip"]
         ext = value.name.split(".")[-1].lower()
         if ext not in valid_extensions:
-            raise serializers.ValidationError(
-                f"Unsupported file extension. Allowed: {', '.join(valid_extensions)}"
-            )
+            raise serializers.ValidationError(f"Unsupported file extension. Allowed: {', '.join(valid_extensions)}")
 
 
 class CoordinateSerializer(Serializer):

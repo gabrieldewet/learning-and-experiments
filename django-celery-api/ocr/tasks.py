@@ -1,15 +1,17 @@
 import logging
 import os
+import zipfile
+from io import BytesIO
 from pathlib import Path
 
 from celery import shared_task
 from celery.contrib.abortable import AbortableTask
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile
 
 from .inference import OcrEngine
-from .models import Job
-from .utils import extract_zip
+from .models import File, Job
 
 logger = logging.getLogger(settings.APP_NAME)
 
@@ -40,25 +42,25 @@ def process_path_task(self: MLTask, job_id: str):
     logger.info(f"Request: {self.request!r}")
 
     job = Job.objects.get(id=job_id)
-    input_path = Path(job.file_path)
-    logger.info(f"{job_id=} | {job.file_path=} | {job.multi_doc=}")
+    files = job.files.all()  # Get all related MyFile instances
+    logger.info(f"{job_id=} | {len(files)=} | {job.multi_doc=}")
 
     # Update status to processing
     job.status = "processing"
     job.save()
 
     documents = []
-    if input_path.is_dir():
+    if len(files) > 1:
         if job.multi_doc:
-            ocr_result = self.ocr_engine.ocr_document_multi(input_path.as_posix())
+            ocr_result = self.ocr_engine.ocr_document_multi(Path(files[0].file.path).parent.as_posix())
             documents.append(ocr_result.formatted_results)
         else:
-            for f in input_path.glob("*"):
-                ocr_result = self.ocr_engine.ocr_document(f.as_posix())
+            for f in files:
+                ocr_result = self.ocr_engine.ocr_document(f.file.path)
                 documents.append(ocr_result.formatted_results)
 
     else:
-        ocr_result = self.ocr_engine.ocr_document(input_path.as_posix())
+        ocr_result = self.ocr_engine.ocr_document(files[0].file.path)
         documents.append(ocr_result.formatted_results)
 
     # Update with result
@@ -71,22 +73,32 @@ def process_path_task(self: MLTask, job_id: str):
 
 
 @shared_task(bind=True, base=AbortableTask)
-def process_file_task(self: AbortableTask, job_id: str, uploaded_file: UploadedFile):
+def process_file_task(self: AbortableTask, job_id: str, upload: UploadedFile):
     logger.info(f"Request: {self.request!r}")
     job = Job.objects.get(id=job_id)
     job.status = "extracting"
     job.save()
 
-    # Filename
-    extract_path = os.path.join(settings.MEDIA_ROOT, "uploaded_files")
-    os.makedirs(extract_path, exist_ok=True)
+    logger.info(f"{job_id=} | {job.multi_doc=}")
 
-    if uploaded_file.name.lower().endswith(".zip"):
-        extract_zip(uploaded_file, extract_path)
+    if upload.name.lower().endswith(".zip"):
+        with zipfile.ZipFile(BytesIO(upload)) as zip_file:
+            for file_info in zip_file.infolist():
+                # Skip directories
+                if file_info.is_dir():
+                    continue
+
+                file_name = file_info.filename
+                with zip_file.open(file_info) as extracted_file:
+                    # Create a MyFile instance and save the file
+                    uploaded_file = File(job=job)
+                    uploaded_file.file.save(file_name, ContentFile(extracted_file.read()))
+                    uploaded_file.save()
 
     else:
-        with open(f"{extract_path}/uploaded_file.name", "wb") as dest:
-            for chunk in uploaded_file.chunks():
-                dest.write(chunk)
+        uploaded_file = File(job=job)
+        uploaded_file.file.save(upload.name, ContentFile(upload))
+        uploaded_file.save()
 
-    process_path_task.delay(job_id, input_path.as_posix(), multi_files)
+    uploaded_files = [f.file.name for f in job.files.all()]
+    logger.info(f"Saved file(s)\n{'\n\t'.join(uploaded_files)}\n to {job.id=}")
