@@ -102,3 +102,4 @@ def process_file_task(self: AbortableTask, job_id: str, upload: UploadedFile):
 
     uploaded_files = [f.file.name for f in job.files.all()]
     logger.info(f"Saved file(s)\n{'\n\t'.join(uploaded_files)}\n to {job.id=}")
+    return job.id
