@@ -3,3 +3,5 @@
 *.ipynb
 *.rdb
 *.sqlite3
+.DS_Stor
+.DS_Store

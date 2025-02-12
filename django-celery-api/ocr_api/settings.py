@@ -5,7 +5,7 @@ Django settings for ocr_api project.
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
@@ -117,7 +117,7 @@ DATABASES = {
     }
 }
 
-PADDLE_MODELS_DIR = BASE_DIR.parent / "models" / "paddle_onnx"
+PADDLE_MODELS_DIR = BASE_DIR / "models" / "paddle_onnx"
 
 
 # Internationalization
@@ -144,21 +144,33 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Celery Configuration
-CELERY_BROKER_URL = "redis://localhost:6379/0"  # Redis broker URL
-CELERY_RESULT_BACKEND = "django-db"  # Redis backend for results
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "django-db"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 
-CELERY_CACHE_BACKEND = "django-cache"
+# CELERY_CACHE_BACKEND = "django-cache"
 
-# celery setting.
-# CELERY_CACHE_BACKEND = 'default'
-
-# # django setting.
 # CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-#         'LOCATION': 'my_cache_table',
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379/1",  # Different DB for cache
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         },
 #     }
 # }
+
+# Optional: Configure Celery to use Redis as a cache
+CELERY_CACHE_BACKEND = "default"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",  # Different DB for cache
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}

@@ -1,5 +1,5 @@
-from adrf.serializers import ModelSerializer, Serializer
 from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer, Serializer
 
 from .models import Job
 
@@ -17,8 +17,8 @@ class JobSerializer(ModelSerializer):
 
     class Meta:
         model = Job
-        fields = ["id", "multi_doc", "status", "result", "created_at", "updated_at"]
-        read_only_fields = ["id", "multi_doc", "status", "result", "created_at", "updated_at"]
+        fields = ["id", "task_id", "multi_doc", "status", "result", "created_at", "updated_at"]
+        read_only_fields = ["id", "task_id", "multi_doc", "status", "result", "created_at", "updated_at"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -39,14 +39,16 @@ class PathSerializer(Serializer):
 
 
 class MultipartSerializer(Serializer):
-    file = serializers.FileField()
+    file = serializers.FileField(max_length=255, allow_empty_file=False)
     single_file = serializers.BooleanField(default=True)
 
     def validate_file(self, value):
-        valid_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".zip"]
+        valid_extensions = ["pdf", "jpg", "jpeg", "png", "zip", "tiff"]
         ext = value.name.split(".")[-1].lower()
+
         if ext not in valid_extensions:
             raise serializers.ValidationError(f"Unsupported file extension. Allowed: {', '.join(valid_extensions)}")
+        return value
 
 
 class CoordinateSerializer(Serializer):

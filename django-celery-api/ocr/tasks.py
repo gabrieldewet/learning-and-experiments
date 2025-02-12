@@ -1,5 +1,5 @@
 import logging
-import os
+import time
 import zipfile
 from io import BytesIO
 from pathlib import Path
@@ -7,6 +7,7 @@ from pathlib import Path
 from celery import shared_task
 from celery.contrib.abortable import AbortableTask
 from django.conf import settings
+from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile
 
@@ -39,7 +40,8 @@ class MLTask(AbortableTask):
 @shared_task(bind=True, base=MLTask)
 def process_path_task(self: MLTask, job_id: str):
     """Celery task to process a path."""
-    logger.info(f"Request: {self.request!r}")
+    logger.info(f"Request: {self.request.id}")
+    # logger.info(f"Request: {self.request!r}")
 
     job = Job.objects.get(id=job_id)
     files = job.files.all()  # Get all related MyFile instances
@@ -47,6 +49,7 @@ def process_path_task(self: MLTask, job_id: str):
 
     # Update status to processing
     job.status = "processing"
+    job.task_id = self.request.id
     job.save()
 
     documents = []
@@ -56,6 +59,12 @@ def process_path_task(self: MLTask, job_id: str):
             documents.append(ocr_result.formatted_results)
         else:
             for f in files:
+                time.sleep(60)
+                if self.is_aborted():  # Check if the task has been marked for abortion
+                    job.status = "aborted"
+                    job.save()
+                    logger.info(f"Task {self.request.id} aborted.")
+                    return
                 ocr_result = self.ocr_engine.ocr_document(f.file.path)
                 documents.append(ocr_result.formatted_results)
 
@@ -73,15 +82,16 @@ def process_path_task(self: MLTask, job_id: str):
 
 
 @shared_task(bind=True, base=AbortableTask)
-def process_file_task(self: AbortableTask, job_id: str, upload: UploadedFile):
-    logger.info(f"Request: {self.request!r}")
+def process_file_task(self: AbortableTask, job_id: str, filename: str, upload: str):
+    logger.info(f"Request: {self.request.id}")
+    # logger.info(f"Request: {self.request!r}")
     job = Job.objects.get(id=job_id)
     job.status = "extracting"
     job.save()
 
     logger.info(f"{job_id=} | {job.multi_doc=}")
 
-    if upload.name.lower().endswith(".zip"):
+    if filename.lower().endswith(".zip"):
         with zipfile.ZipFile(BytesIO(upload)) as zip_file:
             for file_info in zip_file.infolist():
                 # Skip directories

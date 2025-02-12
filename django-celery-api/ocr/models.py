@@ -17,9 +17,11 @@ class Job(models.Model):
         ("processing", "Processing"),
         ("completed", "Completed"),
         ("failed", "Failed"),
+        ("aborted", "Aborted"),
     )
 
     id = models.CharField(primary_key=True, default=generate_job_id, max_length=100, editable=False)
+    task_id = models.CharField(max_length=30, null=True, blank=True)
     multi_doc = models.BooleanField(default=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     result = models.JSONField(null=True, blank=True)

@@ -23,4 +23,5 @@ urlpatterns = [
     path("ocr/", views.ocr_job, name="ocr-process-file"),
     path("ocr/<str:job_id>/", views.ocr_result, name="ocr-get-result"),
     path("", views.health_check, name="health-check"),
+    path("ocr/abort/<str:task_id>/", views.abort_task, name="abort-task"),  # Cancel an OCR job
 ]
