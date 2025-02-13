@@ -19,15 +19,9 @@ class OcrEngine:
     def __init__(self):
         logger.info("Initializing OCR engine")
         self.model = PaddleOCR(
-            cls_model_dir=(
-                settings.PADDLE_MODELS_DIR / "ch_ppocr_mobile_v2.0_cls_infer.onnx"
-            ).as_posix(),
-            det_model_dir=(
-                settings.PADDLE_MODELS_DIR / "Multilingual_PP-OCRv3_det_infer.onnx"
-            ).as_posix(),
-            rec_model_dir=(
-                settings.PADDLE_MODELS_DIR / "latin_PP-OCRv3_rec_infer.onnx"
-            ).as_posix(),
+            cls_model_dir=(settings.PADDLE_MODELS_DIR / "ch_ppocr_mobile_v2.0_cls_infer.onnx").as_posix(),
+            det_model_dir=(settings.PADDLE_MODELS_DIR / "Multilingual_PP-OCRv3_det_infer.onnx").as_posix(),
+            rec_model_dir=(settings.PADDLE_MODELS_DIR / "latin_PP-OCRv3_rec_infer.onnx").as_posix(),
             use_angle_cls=False,
             use_gpu=False,
             use_onnx=True,
@@ -48,7 +42,7 @@ class OcrEngine:
         page_no = 0
         pages = []
         for f in Path(file_path).glob("*"):
-            document = read_file(f)
+            document = read_file(f.as_posix())
             for page in document:
                 result = self.ocr_page(page)
                 pages.append(Page(page_no, result[0]))

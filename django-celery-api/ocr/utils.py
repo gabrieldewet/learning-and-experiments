@@ -129,7 +129,7 @@ def format_pdf_text(lines: list[Line]) -> str:
     result = []
     for y in sorted(line_groups.keys()):
         # Sort lines within group by x-coordinate
-        lines_in_group = sorted(line_groups[y], key=lambda l: l.x_left)
+        lines_in_group = sorted(line_groups[y], key=lambda x: x.x_left)
 
         # Build line with proper spacing
         current_x = min_x
