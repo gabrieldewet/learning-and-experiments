@@ -1,0 +1,20 @@
+<table class="table-auto w-full">
+    <thead>
+        <tr>
+            <th class="px-4 py-2">Movie Name</th>
+            <th class="px-4 py-2">Genre</th>
+            <th class="px-4 py-2">Notes</th>
+            <th class="px-4 py-2">Watched</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in watchlist_items %}
+            <tr>
+                <td class="border px-4 py-2">{{ item.movie_name }}</td>
+                <td class="border px-4 py-2">{{ item.genre }}</td>
+                <td class="border px-4 py-2">{{ item.notes }}</td>
+                <td class="border px-4 py-2">{{ item.watched }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

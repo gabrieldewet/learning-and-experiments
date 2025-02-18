@@ -1,0 +1,39 @@
+{% extends 'ui/base.html' %}
+
+{% block content %}
+    <h1 class="text-2xl font-bold mb-4">My Movie Watchlist</h1>
+
+    <!-- Form to add new movies -->
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+        <div class="mb-2">
+            <label for="movie_name" class="block text-gray-700 text-sm font-bold mb-2">Movie Name:</label>
+            <input type="text" id="movie_name" name="movie_name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        <div class="mb-2">
+            <label for="genre" class="block text-gray-700 text-sm font-bold mb-2">Genre:</label>
+            <input type="text" id="genre" name="genre" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        <div class="mb-2">
+            <label for="notes" class="block text-gray-700 text-sm font-bold mb-2">Notes:</label>
+            <textarea id="notes" name="notes" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+        </div>
+        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Add Movie</button>
+    </form>
+
+    <!-- Watchlist Table -->
+    <div id="watchlist-table" hx-get="{% url 'ui:watchlist_table' %}" hx-trigger="load, modelChanged" hx-swap="outerHTML">
+        {% include 'ui/_watchlist_table.html' %}
+    </div>
+
+    <script>
+        document.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.detail.elt.id === 'watchlist-table') {
+                // Optional: Add a small delay to prevent excessive reloads
+                setTimeout(function() {
+                    htmx.trigger(document.getElementById('watchlist-table'), 'modelChanged');
+                }, 500);
+            }
+        });
+    </script>
+{% endblock %}
