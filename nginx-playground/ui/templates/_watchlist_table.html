@@ -1,19 +1,19 @@
-<table class="table-auto w-full">
+<table class="table table-striped">
     <thead>
         <tr>
-            <th class="px-4 py-2">Movie Name</th>
-            <th class="px-4 py-2">Genre</th>
-            <th class="px-4 py-2">Notes</th>
-            <th class="px-4 py-2">Watched</th>
+            <th>Movie Name</th>
+            <th>Genre</th>
+            <th>Notes</th>
+            <th>Watched</th>
         </tr>
     </thead>
     <tbody>
         {% for item in watchlist_items %}
             <tr>
-                <td class="border px-4 py-2">{{ item.movie_name }}</td>
-                <td class="border px-4 py-2">{{ item.genre }}</td>
-                <td class="border px-4 py-2">{{ item.notes }}</td>
-                <td class="border px-4 py-2">{{ item.watched }}</td>
+                <td>{{ item.movie_name }}</td>
+                <td>{{ item.genre }}</td>
+                <td>{{ item.notes }}</td>
+                <td>{{ item.watched }}</td>
             </tr>
         {% endfor %}
     </tbody>
