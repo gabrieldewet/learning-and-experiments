@@ -1,27 +1,23 @@
 FROM python:3.11-slim-buster
+COPY --from=ghcr.io/astral-sh/uv:0.6.2 /uv /uvx /bin/
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx \
-    curl \  # Add curl to download uv \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv
-RUN curl -fsSL https://raw.githubusercontent.com/astral-sh/uv/main/install.sh | sh
 
 # Create app directory
 WORKDIR /app
 
-# Install python dependencies using uv
-COPY requirements.txt /app/
-RUN /root/.local/bin/uv pip install --no-cache-dir -r requirements.txt
-
 # Copy project
 COPY . /app/
+
+# Install python dependencies using uv
+RUN /root/.local/bin/uv pip install --no-cache-dir -r requirements.txt
+
+
 
 # Collect static files
 RUN python manage.py collectstatic --noinput
