@@ -22,6 +22,12 @@ RUN /root/.local/bin/uv pip install --no-cache-dir -r requirements.txt
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
+# Migrate
+RUN python manage.py migrate
+
+# Create super user
+RUN python manage.py createsuperuser
+
 # Set up Nginx configuration
 COPY nginx/myproject.conf /etc/nginx/conf.d/default.conf
 

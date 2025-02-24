@@ -1,4 +1,4 @@
-{% extends 'ui/base.html' %}
+{% extends 'base.html' %}
 
 {% block content %}
     <h1 class="mt-4">My Movie Watchlist</h1>
@@ -23,7 +23,7 @@
 
     <!-- Watchlist Table -->
     <div id="watchlist-table" hx-get="{% url 'ui:watchlist_table' %}" hx-trigger="load, modelChanged" hx-swap="outerHTML">
-        {% include 'ui/_watchlist_table.html' %}
+        {% include '_watchlist_table.html' %}
     </div>
 
     <script>

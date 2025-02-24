@@ -7,7 +7,7 @@ from .models import WatchlistItem
 from .serializers import UpdateStatusSerializer, WatchlistItemSerializer
 
 
-@api_view("POST", "GET")
+@api_view(["POST", "GET"])
 def get_update_movie(request: Request):
     if request.method == "GET":
         movies = WatchlistItem.objects.filter(watched=False).order_by("-created_at")

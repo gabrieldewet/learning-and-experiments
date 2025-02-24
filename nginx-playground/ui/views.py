@@ -17,11 +17,11 @@ def watchlist_view(request):
 
     watchlist_items = WatchlistItem.objects.all().order_by("-created_at")
     context = {"watchlist_items": watchlist_items}
-    return render(request, "ui/watchlist.html", context)
+    return render(request, "watchlist.html", context)
 
 
 def watchlist_table_partial(request):
     watchlist_items = WatchlistItem.objects.all().order_by("-created_at")
-    template = loader.get_template("ui/_watchlist_table.html")
+    template = loader.get_template("_watchlist_table.html")
     context = {"watchlist_items": watchlist_items}
     return HttpResponse(template.render(context, request))
