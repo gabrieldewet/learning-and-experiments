@@ -1,7 +1,5 @@
-celery==5.4.0
 django==5.1.6
 django-celery-results==2.5.1
 djangorestframework==3.15.2
-celery
 gunicorn
 django-bootstrap5

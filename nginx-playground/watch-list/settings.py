@@ -18,7 +18,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_bootstrap5",
     "rest_framework",
-    "django_celery_results",
     "api",
     "ui",
 ]
@@ -68,16 +67,6 @@ USE_TZ = True
 STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Celery settings
-CELERY_BROKER_URL = "filesystem://"  # Simple filesystem broker
-CELERY_RESULT_BACKEND = "django-cache"
-CELERY_CACHE_BACKEND = "default"
-
-
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "UTC"
 
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
