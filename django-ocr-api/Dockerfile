@@ -3,9 +3,14 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 # Install git and other necessary packages
 RUN apt-get update && \
-    apt-get install -y git && \
+    apt-get install -y git libgomp1 && \
+    # apt-get install -y git wget dpkg && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+# RUN dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+
 
 # Install the project into `/app`
 WORKDIR /app
