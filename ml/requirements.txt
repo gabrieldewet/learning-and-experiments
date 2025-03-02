@@ -16,3 +16,4 @@ onnxruntime
 optimum
 evaluation
 modal
+datasets
