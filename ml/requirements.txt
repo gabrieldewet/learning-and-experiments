@@ -17,3 +17,4 @@ optimum
 evaluate
 modal
 datasets
+opencv-python-headless
