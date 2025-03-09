@@ -8,3 +8,7 @@
 uv pip install modal
 python -m modal setup
 ```
+
+## TODO
+
+- Benchmark possible optimisations to inference 
