@@ -12,3 +12,5 @@ python -m modal setup
 ## TODO
 
 - Benchmark possible optimisations to inference 
+- Train computer vision model using timm wrapper
+- Trian some encoder-based model (or test modernBERT)
