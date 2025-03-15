@@ -1,6 +1,5 @@
 **/__pycache__
 *.log
-*.ipynb
 *.rdb
 *.sqlite3
 .DS_Stor
