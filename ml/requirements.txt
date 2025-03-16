@@ -18,3 +18,4 @@ evaluate
 modal
 datasets
 opencv-python-headless
+pycocotools
