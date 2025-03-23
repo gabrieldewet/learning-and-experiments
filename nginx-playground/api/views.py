@@ -21,3 +21,15 @@ def get_update_movie(request: Request):
             ...
 
     return Response(data={"error": f"Invalid HTTP method {request.method}"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(["GET"])
+def inspect_request(request: Request):
+    print(f"{request.headers=}")
+    # for key, value in request.META.items():
+    #     print(f"{key}: {value}")
+
+    headers = {key: value for key, value in request.headers.items()}
+    other = {key: value for key, value in request.META.items() if key.startswith("HTTP_")}
+
+    return Response(data={"data": request.data, "other": other, "headers": headers}, status=status.HTTP_200_OK)

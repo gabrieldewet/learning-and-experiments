@@ -4,19 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile.app
     ports:
-      - "8000:8000"
-    volumes:
-      - .:/app  # Mount the project directory for development
-
-  nginx:
-    build:
-      context: .
-      dockerfile: Dockerfile.proxy
-    ports:
-      - "80:80"
-    depends_on:
-      - app
-    volumes:
-      - ./nginx/myproject.conf:/etc/nginx/conf.d/default.conf:ro # Mount the nginx config
-      - ./staticfiles:/usr/share/nginx/html/static:ro # Mount static files
-
+      - "8080:80"
+    # volumes:
+    #   - .:/app  # Mount the project directory for development

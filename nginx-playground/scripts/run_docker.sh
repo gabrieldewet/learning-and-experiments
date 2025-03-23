@@ -9,7 +9,7 @@ else
     INTERACTIVE=""
 fi
 
-docker build --secret id=aws_credentials,src=$HOME/.aws/credentials -t ocr-async-api .
+docker build -t ocr-async-api .
 
 docker run \
     -v \
