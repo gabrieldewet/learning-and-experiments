@@ -12,3 +12,6 @@ def square(x):
 @app.local_entrypoint()
 def main():
     print("the square is", square.remote(42))
+
+# Function to test llm suggestion
+def 
