@@ -255,6 +255,101 @@ def parse_chunked_data(stream):
 ```
 
 ## Example of chunked request
+
+```python
+import httpx
+import os
+import mimetypes
+import uuid
+
+async def send_chunked_multipart(url, file_path, document_type):
+    """
+    Sends a chunked multipart/form-data request with a file and a parameter.
+    """
+    async with httpx.AsyncClient() as client:
+        # Generate a unique boundary
+        boundary = f'--httpx-boundary-{uuid.uuid4().hex}'
+
+        async def chunked_body_generator():
+            """Generates the chunked body parts."""
+            print("Starting to generate chunked body...")
+
+            # --- Start of body ---
+            start_body = b''
+            start_body += f'--{boundary}\r\n'.encode('utf-8')
+            start_body += b'Content-Disposition: form-data; name="documentType"\r\n'
+            start_body += b'\r\n'
+            start_body += f'{document_type}\r\n'.encode('utf-8')
+            yield start_body
+
+            # --- File part ---
+            file_name = os.path.basename(file_path)
+            content_type, _ = mimetypes.guess_type(file_path)
+            if content_type is None:
+                content_type = 'application/octet-stream'
+
+            file_header = b''
+            file_header += f'--{boundary}\r\n'.encode('utf-8')
+            file_header += f'Content-Disposition: form-data; name="document"; filename="{file_name}"\r\n'.encode('utf-8')
+            file_header += f'Content-Type: {content_type}\r\n'.encode('utf-8')
+            file_header += b'\r\n'
+            yield file_header
+
+            # Read the file in chunks and yield
+            chunk_size = 8192 # Adjust chunk size as needed
+            try:
+                with open(file_path, 'rb') as f:
+                    while True:
+                        chunk = f.read(chunk_size)
+                        if not chunk:
+                            break # End of file
+                        yield chunk # Yield the file chunk
+            except FileNotFoundError:
+                print(f"Error: File not found at {file_path}")
+                return # Stop the generator
+
+            # --- End of body ---
+            end_body = b'\r\n' # CRLF after the last file chunk
+            end_body += f'--{boundary}--\r\n'.encode('utf-8') # Final boundary
+            yield end_body
+
+            print("Finished generating chunked body.")
+
+        # --- httpx Request ---
+        headers = {
+            'Content-Type': f'multipart/form-data; boundary={boundary}',
+            'Transfer-Encoding': 'chunked', # Explicitly set chunked encoding
+        }
+
+        print(f"Sending chunked multipart request to: {url}")
+        try:
+            # Pass the generator directly as the content
+            response = await client.post(url, headers=headers, content=chunked_body_generator())
+            print(f"Response Status Code: {response.status_code}")
+            print("Response Body:")
+            print(response.text)
+        except httpx.RequestError as exc:
+            print(f"An error occurred while requesting {exc.request.url!r}: {exc}")
+
+# --- Example Usage ---
+if __name__ == "__main__":
+    # Replace with your API endpoint
+    api_url = "YOUR_API_ENDPOINT_HERE"
+    # Replace with the path to the file you want to upload
+    file_to_upload = "path/to/your/file.txt"
+    doc_type = "invoice"
+
+    if api_url == "YOUR_API_ENDPOINT_HERE":
+        print("Please replace 'YOUR_API_ENDPOINT_HERE' with your actual API endpoint.")
+    elif not os.path.exists(file_to_upload):
+        print(f"Error: File not found at {file_to_upload}. Please update file_to_upload.")
+    else:
+        import asyncio
+        asyncio.run(send_chunked_multipart(api_url, file_to_upload, doc_type))
+
+```
+
+
 ```python
 import httpx
 import json
