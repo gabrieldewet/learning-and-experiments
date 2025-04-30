@@ -253,3 +253,58 @@ def parse_chunked_data(stream):
 
 # ... Rest of your parser classes using parse_chunked_data ...
 ```
+
+## Example of chunked request
+```python
+import httpx
+import json
+
+async def send_chunked_json(url, document_type, document_path):
+    """
+    Sends a chunked application/json request.
+    """
+    async with httpx.AsyncClient() as client:
+        json_payload = {
+            "documentType": document_type,
+            "documentPath": document_path
+        }
+        # Convert the Python dict to a JSON byte string
+        json_bytes = json.dumps(json_payload).encode('utf-8')
+
+        async def chunked_json_generator():
+            """Generates the chunked JSON body."""
+            print("Starting to generate chunked JSON body...")
+            # Yield the entire JSON body as one chunk for simplicity
+            yield json_bytes
+            print("Finished generating chunked JSON body.")
+
+        # --- httpx Request ---
+        headers = {
+            'Content-Type': 'application/json',
+            'Transfer-Encoding': 'chunked', # Explicitly set chunked encoding
+        }
+
+        print(f"Sending chunked JSON request to: {url}")
+        try:
+            # Pass the generator directly as the content
+            response = await client.post(url, headers=headers, content=chunked_json_generator())
+            print(f"Response Status Code: {response.status_code}")
+            print("Response Body:")
+            print(response.text)
+        except httpx.RequestError as exc:
+            print(f"An error occurred while requesting {exc.request.url!r}: {exc}")
+
+
+# --- Example Usage ---
+if __name__ == "__main__":
+    # Replace with your API endpoint
+    api_url = "YOUR_API_ENDPOINT_HERE"
+    doc_type = "report"
+    doc_path = "/path/to/document.pdf" # Example path
+
+    if api_url == "YOUR_API_ENDPOINT_HERE":
+        print("Please replace 'YOUR_API_ENDPOINT_HERE' with your actual API endpoint.")
+    else:
+        import asyncio
+        asyncio.run(send_chunked_json(api_url, doc_type, doc_path))
+```
