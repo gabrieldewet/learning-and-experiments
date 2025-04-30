@@ -172,3 +172,84 @@ def handle_chunked_data_api_view(request):
 ```
 
 This setup provides the functionality to handle both chunked multipart and chunked JSON requests, keeps the parser code focused, and leaves your view logic clean. Remember to import the necessary components from `rest_framework.parsers` like `json_parser`.
+
+
+```python
+# parsers.py (Corrected parse_chunked_data to read remaining data)
+
+from rest_framework.parsers import BaseParser, MultiPartParser, json_parser
+from rest_framework.exceptions import ParseError
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
+import io
+from rest_framework.request import Request
+import json
+from rest_framework.utils.data import DataAndFiles
+
+def parse_chunked_data(stream):
+    """Reads from the stream and parses the chunked transfer encoding,
+       including any data remaining after the size 0 chunk."""
+    reassembled_data = b''
+    try:
+        while True:
+            size_line = b''
+            while True:
+                temp_line = stream.readline()
+                if not temp_line:
+                    raise ParseError("Malformed chunked data: Unexpected end of stream while reading chunk size.")
+
+                stripped_line = temp_line.strip()
+                if stripped_line:
+                    size_line = stripped_line
+                    break
+                else:
+                    pass # Skip empty lines
+
+            if not size_line:
+                 raise ParseError("Malformed chunked data: Encountered unexpected empty line logic after inner loop.")
+
+            try:
+                chunk_size = int(size_line, 16)
+            except ValueError:
+                 raise ParseError(f"Malformed chunked data: Invalid chunk size literal: {stripped_line.decode('utf-8', errors='ignore')}. Expected hexadecimal.")
+
+
+            if chunk_size == 0:
+                # Found the last chunk (size 0)
+                # Read and discard trailing headers
+                while True:
+                    trailing_line = stream.readline()
+                    if not trailing_line or not trailing_line.strip():
+                        break
+
+                print("Debug: Encountered chunk size 0. Reading any remaining data.")
+                # ** Crucial Change: Read any remaining data in the stream **
+                remaining_data = stream.read()
+                print(f"Debug: Read {len(remaining_data)} bytes of remaining data after size 0 chunk.")
+                reassembled_data += remaining_data # Add remaining data to reassembled_data
+
+                return reassembled_data # Return the final reassembled data
+
+            # Read the chunk data
+            chunk_data = stream.read(chunk_size)
+            if len(chunk_data) != chunk_size:
+                raise ParseError(f"Malformed chunked data: Expected {chunk_size} bytes, but read {len(chunk_data)}.")
+
+            reassembled_data += chunk_data
+
+            # Read the CRLF after the chunk data
+            crlf = stream.read(2)
+            if crlf != b'\r\n':
+                raise ParseError(f"Malformed chunked data: Expected CRLF ({b'\\r\\n'}) after chunk data, but got {crlf}.")
+
+
+        # This point should not be reached
+        return reassembled_data
+
+
+    except ParseError:
+        raise
+    except Exception as e:
+        raise ParseError(f"Unexpected error during chunked data parsing: {e}")
+
+# ... Rest of your parser classes using parse_chunked_data ...
+```
